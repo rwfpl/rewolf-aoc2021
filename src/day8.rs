@@ -133,7 +133,6 @@ fn process_line(l: &str) -> u32 {
 
     let mut digit_map = map1478(&pi);
     digit_map.extend(map235(&pi, &digit_map));
-
     digit_map.extend(map069(&pi, &digit_map));
     pi.output_values
         .iter()
