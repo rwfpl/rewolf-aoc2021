@@ -12,8 +12,5 @@ fn test_run() {
 
 pub fn run() -> (String, String) {
     let input = fs::read_to_string("src/inputs/aoc_XX.input").unwrap();
-    (
-        solution(&input).to_string(),
-        solution(&input).to_string(),
-    )
+    (solution(&input).to_string(), solution(&input).to_string())
 }
