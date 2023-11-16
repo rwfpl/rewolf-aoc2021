@@ -19,9 +19,10 @@ struct Graph<'a> {
 
 impl<'a> From<&'a str> for Graph<'a> {
     fn from(s: &'a str) -> Self {
+        let capacity = s.lines().count();
         let mut g = Graph {
-            nodes: Vec::new(),
-            name_to_idx: HashMap::new(),
+            nodes: Vec::with_capacity(capacity),
+            name_to_idx: HashMap::with_capacity(capacity),
         };
         s.lines().for_each(|l| {
             let (a, b) = l.split_once('-').unwrap();
@@ -41,25 +42,21 @@ impl<'a> From<&'a str> for Graph<'a> {
                 i
             };
 
-            if g.name_to_idx.contains_key(a) {
-                g.nodes[*g.name_to_idx.get(a).unwrap()].edges.push(b_idx);
-            } else {
-                g.nodes.push(Node {
-                    edges: vec![b_idx],
-                    is_lower: a.chars().all(|c| c.is_lowercase()),
-                });
-                g.name_to_idx.insert(a, a_idx);
-            }
-
-            if g.name_to_idx.contains_key(b) {
-                g.nodes[*g.name_to_idx.get(b).unwrap()].edges.push(a_idx);
-            } else {
-                g.nodes.push(Node {
-                    edges: vec![a_idx],
-                    is_lower: b.chars().all(|c| c.is_lowercase()),
-                });
-                g.name_to_idx.insert(b, b_idx);
-            }
+            let mut push_node = |node: &'a str, from_idx: usize, to_idx: usize| {
+                if g.name_to_idx.contains_key(node) {
+                    g.nodes[*g.name_to_idx.get(node).unwrap()]
+                        .edges
+                        .push(to_idx);
+                } else {
+                    g.nodes.push(Node {
+                        edges: vec![to_idx],
+                        is_lower: node.chars().all(|c| c.is_lowercase()),
+                    });
+                    g.name_to_idx.insert(node, from_idx);
+                }
+            };
+            push_node(a, a_idx, b_idx);
+            push_node(b, b_idx, a_idx);
         });
         g
     }
