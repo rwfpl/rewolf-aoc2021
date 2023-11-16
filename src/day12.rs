@@ -63,24 +63,24 @@ impl<'a> From<&'a str> for Graph<'a> {
 }
 
 impl<'a> Graph<'a> {
-    fn is_dead_p1(&self, _: usize, to_node: &usize, current_path: &[usize]) -> bool {
-        self.nodes[*to_node].is_lower && current_path.contains(to_node)
+    fn is_dead_p1(&self, _: usize, to_node: usize, current_path: &[usize]) -> bool {
+        self.nodes[to_node].is_lower && current_path.contains(&to_node)
     }
 
-    fn is_dead_p2(&self, start: usize, to_node: &usize, current_path: &[usize]) -> bool {
-        *to_node == start
-            || (self.nodes[*to_node].is_lower
-                && ((current_path.iter().filter(|f| *f == to_node).count() > 1)
+    fn is_dead_p2(&self, start: usize, to_node: usize, current_path: &[usize]) -> bool {
+        to_node == start
+            || (self.nodes[to_node].is_lower
+                && ((current_path.iter().filter(|f| **f == to_node).count() > 1)
                     || (current_path
                         .iter()
                         .filter(|f| self.nodes[**f].is_lower)
-                        .chain(iter::once(to_node))
+                        .chain(iter::once(&to_node))
                         .duplicates()
                         .count()
                         > 1)))
     }
 
-    fn bfs(&self, is_dead: fn(&Self, usize, &usize, &[usize]) -> bool) -> u32 {
+    fn bfs(&self, is_dead: fn(&Self, usize, usize, &[usize]) -> bool) -> u32 {
         let start = *self.name_to_idx.get("start").unwrap();
         let end = *self.name_to_idx.get("end").unwrap();
         let mut to_visit: VecDeque<Vec<usize>> = VecDeque::new();
@@ -94,7 +94,7 @@ impl<'a> Graph<'a> {
                 .for_each(|to_node| {
                     if *to_node == end {
                         found += 1;
-                    } else if !is_dead(self, start, to_node, &current) {
+                    } else if !is_dead(self, start, *to_node, &current) {
                         to_visit.push_back(Vec::from_iter(
                             current.iter().copied().chain(iter::once(*to_node)),
                         ));
