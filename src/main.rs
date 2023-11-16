@@ -9,6 +9,7 @@ mod day1;
 mod day10;
 mod day11;
 mod day12;
+mod day13;
 mod day2;
 mod day3;
 mod day4;
@@ -20,7 +21,8 @@ mod day9;
 
 fn main() {
     let days = [
-        (5, day5::run as fn() -> (String, String)),
+        (12, day12::run as fn() -> (String, String)),
+        (5, day5::run),
         (7, day7::run),
         (9, day9::run),
         (8, day8::run),
@@ -31,7 +33,7 @@ fn main() {
         (6, day6::run),
         (10, day10::run),
         (11, day11::run),
-        (12, day12::run),
+        (13, day13::run),
     ];
     let now = Instant::now();
     let day = env::args()
