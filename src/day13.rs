@@ -58,11 +58,16 @@ impl From<&str> for Action {
 fn points_stringify(points: &HashSet<Point>) -> String {
     let max_x = points.iter().map(|p| p.x).max().unwrap() + 1;
     let max_y = points.iter().map(|p| p.y).max().unwrap() + 1;
-    let grid: Vec<Vec<bool>> = Vec::from_iter(
-        (0..max_y).map(|y| Vec::from_iter((0..max_x).map(|x| points.contains(&Point { x, y })))),
-    );
-    grid.iter()
-        .flat_map(|row| std::iter::once('\n').chain(row.iter().map(|p| if *p { 'X' } else { ' ' })))
+    (0..max_y)
+        .flat_map(|y| {
+            std::iter::once('\n').chain((0..max_x).map(move |x| {
+                if points.contains(&Point { x, y }) {
+                    'X'
+                } else {
+                    ' '
+                }
+            }))
+        })
         .collect::<String>()
 }
 
