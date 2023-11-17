@@ -41,15 +41,13 @@ impl From<&str> for Fold {
 enum Action {
     Point(Point),
     Fold(Fold),
-    None,
 }
 
 impl From<&str> for Action {
     fn from(s: &str) -> Self {
-        match s.chars().next() {
-            Some('f') => Action::Fold(Fold::from(s)),
-            Some(_) => Action::Point(Point::from(s)),
-            None => Action::None,
+        match s.chars().next().unwrap() {
+            'f' => Action::Fold(Fold::from(s)),
+            _ => Action::Point(Point::from(s)),
         }
     }
 }
