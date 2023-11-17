@@ -20,7 +20,6 @@ impl From<&str> for Point {
 enum Fold {
     X(usize),
     Y(usize),
-    Error,
 }
 
 impl From<&str> for Fold {
@@ -33,7 +32,7 @@ impl From<&str> for Fold {
         match axis {
             "x" => Fold::X(str::parse(v).unwrap()),
             "y" => Fold::Y(str::parse(v).unwrap()),
-            _ => Fold::Error,
+            _ => panic!("!nicht gut!"),
         }
     }
 }
@@ -119,7 +118,6 @@ fn solution(input: &str) -> (usize, String) {
                             }
                         }
                     }
-                    Fold::Error => panic!("!nicht gut!"),
                 })
                 .collect::<HashSet<Point>>();
             if after_first_fold_count == 0 {
