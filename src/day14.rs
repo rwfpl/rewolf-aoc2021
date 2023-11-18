@@ -33,13 +33,7 @@ impl From<&str> for PairRule {
 }
 
 fn merge_maps(m1: &mut CharCountMap, m2: &CharCountMap) {
-    m2.iter().for_each(|(k, v)| {
-        if let Some(ev) = m1.get_mut(k) {
-            *ev += *v;
-        } else {
-            m1.insert(*k, *v);
-        }
-    });
+    m2.iter().for_each(|(k, v)| *m1.entry(*k).or_default() += v);
 }
 
 fn simulate(level: u32, max_level: u32, p: &Pair, rules: &RuleMap) -> CharCountMap {
@@ -76,13 +70,9 @@ fn solution(input: &str, max_steps: u32) -> u64 {
         .collect::<RuleMap>();
 
     let mut cm = CharCountMap::new();
-    initial_polymer.chars().for_each(|c| {
-        if let Some(v) = cm.get_mut(&c) {
-            *v += 1;
-        } else {
-            cm.insert(c, 1);
-        }
-    });
+    initial_polymer
+        .chars()
+        .for_each(|c| *cm.entry(c).or_default() += 1);
 
     initial_polymer
         .chars()
