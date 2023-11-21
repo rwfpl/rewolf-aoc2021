@@ -12,6 +12,7 @@ mod day12;
 mod day13;
 mod day14;
 mod day15;
+mod day16;
 mod day2;
 mod day3;
 mod day4;
@@ -38,6 +39,7 @@ fn main() {
         (13, day13::run),
         (14, day14::run),
         (15, day15::run),
+        (16, day16::run),
     ];
     let now = Instant::now();
     let day = env::args()
