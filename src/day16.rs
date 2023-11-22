@@ -1,5 +1,7 @@
 use bitreader::BitReader;
-use std::fs;
+use itertools::FoldWhile;
+use itertools::Itertools;
+use std::{fs, iter};
 
 fn handle_operator(op: u8, vals: &[u64]) -> u64 {
     match op {
@@ -7,76 +9,62 @@ fn handle_operator(op: u8, vals: &[u64]) -> u64 {
         1 => vals.iter().product(),
         2 => *vals.iter().min().unwrap(),
         3 => *vals.iter().max().unwrap(),
-        5 => {
-            if vals[0] > vals[1] {
-                1
-            } else {
-                0
-            }
-        }
-        6 => {
-            if vals[0] < vals[1] {
-                1
-            } else {
-                0
-            }
-        }
-        7 => {
-            if vals[0] == vals[1] {
-                1
-            } else {
-                0
-            }
-        }
+        5 => (vals[0] > vals[1]) as u64,
+        6 => (vals[0] < vals[1]) as u64,
+        7 => (vals[0] == vals[1]) as u64,
         _ => panic!("!kaputt!"),
     }
 }
 
+fn handle_literal(br: &mut BitReader) -> u64 {
+    iter::repeat(0)
+        .fold_while((1, 0u64), |(last_group, val), _| {
+            if last_group != 0 {
+                FoldWhile::Continue((br.read_u8(1).unwrap(), (val << 4) | br.read_u64(4).unwrap()))
+            } else {
+                FoldWhile::Done((0, val))
+            }
+        })
+        .into_inner()
+        .1
+}
+
+fn handle_packets_by_bit_size(br: &mut BitReader, cver: u32, op: u8) -> (u32, u64) {
+    let total_bit_len = br.read_u16(15).unwrap() as u64;
+    let cpos = br.position();
+    let (ver, vals) = iter::repeat(0)
+        .fold_while((0u32, Vec::new()), |(ver, mut vals), _| {
+            if br.position() == cpos + total_bit_len {
+                FoldWhile::Done((ver, vals))
+            } else {
+                let (pver, pval) = parse_packet(br);
+                vals.push(pval);
+                FoldWhile::Continue((ver + pver, vals))
+            }
+        })
+        .into_inner();
+    (cver + ver, handle_operator(op, &vals))
+}
+
+fn handle_packets_by_cnt(br: &mut BitReader, cver: u32, op: u8) -> (u32, u64) {
+    let num_sub_packets = br.read_u16(11).unwrap();
+    let (ver, vals) = (0..num_sub_packets).fold((0u32, Vec::new()), |(ver, mut vals), _| {
+        let (pver, pval) = parse_packet(br);
+        vals.push(pval);
+        (ver + pver, vals)
+    });
+    (cver + ver, handle_operator(op, &vals))
+}
+
 fn parse_packet(br: &mut BitReader) -> (u32, u64) {
-    let mut ver = br.read_u32(3).unwrap();
-    let type_id = br.read_u8(3).unwrap();
-    match type_id {
-        4 => {
-            // literal
-            let mut val = 0u64;
-            loop {
-                let last_group = br.read_u8(1).unwrap();
-                val <<= 4;
-                val |= br.read_u64(4).unwrap();
-                if last_group == 0 {
-                    return (ver, val);
-                }
-            }
-        }
-        op => {
-            // operator
-            let length_type_id = br.read_u8(1).unwrap();
-            let mut vals: Vec<u64> = Vec::new();
-            match length_type_id {
-                0 => {
-                    let total_bit_len = br.read_u16(15).unwrap();
-                    let cpos = br.position();
-                    loop {
-                        let (pver, pval) = parse_packet(br);
-                        ver += pver;
-                        vals.push(pval);
-                        if br.position() == cpos + total_bit_len as u64 {
-                            break;
-                        }
-                    }
-                }
-                1 => {
-                    let num_sub_packets = br.read_u16(11).unwrap();
-                    (0..num_sub_packets).for_each(|_| {
-                        let (pver, pval) = parse_packet(br);
-                        ver += pver;
-                        vals.push(pval);
-                    })
-                }
-                _ => panic!("!kaputt!"),
-            }
-            (ver, handle_operator(op, &vals))
-        }
+    let ver = br.read_u32(3).unwrap();
+    match br.read_u8(3).unwrap() {
+        4 => (ver, handle_literal(br)),
+        op => match br.read_u8(1).unwrap() {
+            0 => handle_packets_by_bit_size(br, ver, op),
+            1 => handle_packets_by_cnt(br, ver, op),
+            _ => panic!("!kaputt!"),
+        },
     }
 }
 

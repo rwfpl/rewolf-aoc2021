@@ -132,7 +132,6 @@ fn solution(input: &str) -> usize {
 fn solution2(input: &str) -> usize {
     let mut g = Grid::from(input);
     g.p2expand();
-    println!("{} {}", g.g.len(), g.g[0].len());
     g.sol()
 }
 
