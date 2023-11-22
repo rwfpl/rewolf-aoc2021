@@ -30,11 +30,10 @@ fn handle_literal(br: &mut BitReader) -> u64 {
 }
 
 fn handle_packets_by_bit_size(br: &mut BitReader, cver: u32, op: u8) -> (u32, u64) {
-    let total_bit_len = br.read_u16(15).unwrap() as u64;
-    let cpos = br.position();
+    let max_pos = br.read_u16(15).unwrap() as u64 + br.position();
     let (ver, vals) = iter::repeat(0)
         .fold_while((0u32, Vec::new()), |(ver, mut vals), _| {
-            if br.position() == cpos + total_bit_len {
+            if br.position() == max_pos {
                 FoldWhile::Done((ver, vals))
             } else {
                 let (pver, pval) = parse_packet(br);
