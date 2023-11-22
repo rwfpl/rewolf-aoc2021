@@ -47,12 +47,12 @@ fn handle_packets_by_bit_size(br: &mut BitReader, cver: u32, op: u8) -> (u32, u6
 }
 
 fn handle_packets_by_cnt(br: &mut BitReader, cver: u32, op: u8) -> (u32, u64) {
-    let num_sub_packets = br.read_u16(11).unwrap();
-    let (ver, vals) = (0..num_sub_packets).fold((0u32, Vec::new()), |(ver, mut vals), _| {
-        let (pver, pval) = parse_packet(br);
-        vals.push(pval);
-        (ver + pver, vals)
-    });
+    let (ver, vals) =
+        (0..br.read_u16(11).unwrap()).fold((0u32, Vec::new()), |(ver, mut vals), _| {
+            let (pver, pval) = parse_packet(br);
+            vals.push(pval);
+            (ver + pver, vals)
+        });
     (cver + ver, handle_operator(op, &vals))
 }
 
